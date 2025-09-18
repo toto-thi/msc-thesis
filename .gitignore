@@ -1,0 +1,11 @@
+.DS_Store
+.vscode
+.env
+.venv
+.python-versions
+
+__pycache__/
+
+dataset/
+results/
+
