@@ -181,7 +181,6 @@ def run_evaluation_in_batch(
                             "age": item.get("age", ""),
                             "sex": item.get("sex", ""),
                             "lesion_location": item.get("anatom_site", ""),
-                            "is_melanocytic": item.get("melanocytic", ""),
                         },
                         "ground_truth": item.get("diagnosis") or item.get("label") or "",
                         "trace": [],
