@@ -4,7 +4,6 @@ import numpy as np, torch
 from PIL import Image
 from open_clip import create_model_from_pretrained
 from qdrant_client import QdrantClient
-from qdrant_client.http import models as rest
 
 MODEL_ID = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
 
