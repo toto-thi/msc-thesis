@@ -121,7 +121,7 @@ def run_evaluation_in_batch(
 ) -> Path:
     """
     Runs the agent over a list of items shaped like:
-        {"img_path": "...", "diagnosis": "...", "melanocytic": Optional[bool]}
+        {"img_path": "...", "diagnosis": "..."}
     and writes the *final agent state* for each item as one JSON line to:
         <out_dir>/agent_evaluation_full.jsonl
 
@@ -129,9 +129,9 @@ def run_evaluation_in_batch(
     - Resume-safe: skips items already present in the JSONL (by image stem).
     - Returns the Path to the JSONL file.
     """
-    print("🚀 Starting evaluation (JSONL only)…")
-    print(f"📊 Dataset size: {len(test_dataset)}")
-    print(f"🔄 Resuming: {resume}")
+    print("Starting evaluation (JSONL only)…")
+    print(f"Dataset size: {len(test_dataset)}")
+    print(f"Resuming: {resume}")
 
     out_dir_p = Path(out_dir)
     out_dir_p.mkdir(parents=True, exist_ok=True)
@@ -139,7 +139,7 @@ def run_evaluation_in_batch(
 
     processed_ids = set()
     if resume and jsonl_path.exists():
-        print(f"🔁 Resuming from {jsonl_path}")
+        print(f"Resuming from {jsonl_path}")
         with open(jsonl_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
@@ -154,7 +154,7 @@ def run_evaluation_in_batch(
                 except Exception:
                     # ignore malformed lines during resume scan
                     pass
-        print(f"✅ Already processed: {len(processed_ids)} images")
+        print(f"Already processed: {len(processed_ids)} images")
 
     # Filter items to process
     unprocessed = [it for it in test_dataset if Path(it["image_path"]).stem not in processed_ids]
@@ -207,11 +207,11 @@ def run_evaluation_in_batch(
                         elapsed = time.time() - start_time
                         avg = elapsed / (i + 1)
                         eta = avg * (remaining - i - 1)
-                        print(f"⏳ Progress: {i+1}/{remaining} | ETA: {int(eta//60)}m {int(eta%60)}s")
+                        print(f"Progress: {i+1}/{remaining} | ETA: {int(eta//60)}m {int(eta%60)}s")
 
                 except Exception as e:
                     err = f"{type(e).__name__}: {str(e)}"
-                    print(f"❌ Failed on {image_stem}: {err}")
+                    print(f"Failed on {image_stem}: {err}")
                     patient_data = {
                         "age": item.get("age", ""),
                         "sex": item.get("sex", ""),
