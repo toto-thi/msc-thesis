@@ -4,6 +4,7 @@ import numpy as np, torch
 from PIL import Image
 from open_clip import create_model_from_pretrained
 from qdrant_client import QdrantClient
+from qdrant_client.http import models as rest
 
 MODEL_ID = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
 
@@ -23,7 +24,6 @@ def _extract_vector_from_qdrant_vec(vec_field: Any) -> Optional[np.ndarray]:
     if vec_field is None:
         return None
     if isinstance(vec_field, dict):
-        # take the first vector if named; adjust key if you know it
         for _, v in vec_field.items():
             return np.asarray(v, dtype=np.float32)
         return None
@@ -58,7 +58,7 @@ class QdrantBiomedCLIPRetriever:
             query_vector=q_vec.tolist(),
             limit=limit,
             with_payload=True,
-            with_vectors=True,   # ask Qdrant for stored vectors if available
+            with_vectors=True,   
         )
         out = []
         for h in hits:
@@ -80,7 +80,7 @@ class QdrantBiomedCLIPRetriever:
         return out
 
     def _ensure_vectors(self, items: List[Dict[str, Any]]):
-        # Re-embed only missing vectors (a handful, cheap).
+        # Re-embed only missing vectors.
         need = [it for it in items if it.get("vec") is None]
         if not need:
             return
@@ -135,6 +135,7 @@ class QdrantBiomedCLIPRetriever:
         self,
         image_path: str,
         k: int = 3,
+        is_melanocytic_filter: Optional[bool] = None, 
         exclude_same: bool = True,
         k_coarse: int = 100,
         mmr_lambda: float = 0.65,
@@ -147,7 +148,7 @@ class QdrantBiomedCLIPRetriever:
         q_vec = self._embed_image(Image.open(src_abs))
 
         # 1) Coarse shortlist
-        coarse = self._coarse(q_vec, limit=max(k_coarse, k + 20))
+        coarse = self._coarse(q_vec, limit=max(k_coarse, k + 20), is_melanocytic_filter=is_melanocytic_filter)
 
         # 2) Exclude the exact same file if it appears in the index
         if exclude_same:
@@ -158,8 +159,8 @@ class QdrantBiomedCLIPRetriever:
         coarse = [c for c in coarse if c.get("vec") is not None]
         if not coarse:
             return []
-
-        # 4) MMR re-ranking (vectors only) + light diagnosis diversity
+        
+        # 4) MMR re-ranking 
         final = self._mmr(coarse, q_vec, k=k, lambda_=mmr_lambda, dx_penalty=dx_penalty)
 
         # 5) Minimal payload back
